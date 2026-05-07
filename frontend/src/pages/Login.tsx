@@ -19,8 +19,8 @@ export default function Login() {
     setSubmitError(null);
     setSubmitting(true);
     try {
-      await login(email, password);
-      navigate("/", { replace: true });
+      const user = await login(email, password);
+      navigate(user.role === "admin" ? "/profile" : "/", { replace: true });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -139,7 +139,6 @@ export default function Login() {
                   <input type="checkbox" className="w-4 h-4 border-black/5 rounded bg-white/50 text-primary focus:ring-primary/20" />
                   <span className="ml-3 text-[10px] font-black text-charcoal/40 uppercase tracking-widest group-hover:text-charcoal transition-colors">Remember Me</span>
                 </label>
-                <a href="#" className="text-[10px] font-black text-primary uppercase tracking-widest hover:text-primary-dark transition-colors">Forgot Password?</a>
               </div>
 
               <button

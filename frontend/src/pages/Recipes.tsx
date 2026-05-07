@@ -119,7 +119,7 @@ export default function Recipes() {
               Curated <span className="italic text-primary">Collections</span>
             </h1>
             <p className="text-charcoal/50 text-lg max-w-xl leading-relaxed font-medium">
-              Explore {totalRecipes} masterpieces from our kitchen. Refine by category or use advanced filters to find your perfect match.
+              Explore masterpieces from our kitchen. Refine by category or use advanced filters to find your perfect match.
             </p>
           </div>
 
@@ -147,8 +147,8 @@ export default function Recipes() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-3 px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${showFilters
-                  ? "bg-charcoal text-white shadow-xl shadow-charcoal/20"
-                  : "bg-white text-charcoal border border-black/5 hover:border-primary/30 shadow-sm"
+                ? "bg-charcoal text-white shadow-xl shadow-charcoal/20"
+                : "bg-white text-charcoal border border-black/5 hover:border-primary/30 shadow-sm"
                 }`}
             >
               <svg className={`w-4 h-4 transition-transform duration-500 ${showFilters ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -279,16 +279,18 @@ export default function Recipes() {
                   <img
                     src={getRecipeImageUrl(recipe.imageName)}
                     alt={recipe.recipeName}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       if (!target.src.includes('unsplash')) {
-                        target.src = "https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&q=80&w=800&h=1000";
+                        target.src = "https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&q=60&w=400&h=500";
                       }
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
-                  
+
                   <div className="absolute top-8 left-8">
                     <span className="px-5 py-2 glass text-charcoal text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
                       {recipe.category}

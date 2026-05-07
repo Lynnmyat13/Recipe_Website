@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import logo from "../assets/Logo.png";
 
@@ -13,7 +13,10 @@ export default function Header({
   searchValue = "",
   onSearchChange,
 }: HeaderProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <header className="sticky top-0 z-50 glass border-b border-black/5">
@@ -39,26 +42,54 @@ export default function Header({
         </div>
 
         <nav className="flex items-center justify-center gap-1 text-[12px] font-bold uppercase tracking-wider">
-          <Link to="/" className="px-4 py-2 text-charcoal/60 hover:text-primary transition-colors relative group">
+          <Link
+            to="/"
+            className={`px-4 py-2 transition-colors relative group ${isActive("/") ? "text-primary" : "text-charcoal/60 hover:text-primary"
+              }`}
+          >
             Home
-            <span className="absolute bottom-1 left-4 right-4 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+            <span
+              className={`absolute -bottom-1 left-4 right-4 h-[3px] bg-primary rounded-full transition-transform duration-300 ${isActive("/") ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                }`}
+            />
           </Link>
-          <Link to="/recipes" className="px-4 py-2 text-charcoal/60 hover:text-primary transition-colors relative group">
+          <Link
+            to="/recipes"
+            className={`px-4 py-2 transition-colors relative group ${isActive("/recipes") ? "text-primary" : "text-charcoal/60 hover:text-primary"
+              }`}
+          >
             Recipes
-            <span className="absolute bottom-1 left-4 right-4 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+            <span
+              className={`absolute -bottom-1 left-4 right-4 h-[3px] bg-primary rounded-full transition-transform duration-300 ${isActive("/recipes") ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                }`}
+            />
           </Link>
-          <Link to="/about" className="px-4 py-2 text-charcoal/60 hover:text-primary transition-colors relative group">
+          <Link
+            to="/about"
+            className={`px-4 py-2 transition-colors relative group ${isActive("/about") ? "text-primary" : "text-charcoal/60 hover:text-primary"
+              }`}
+          >
             About
-            <span className="absolute bottom-1 left-4 right-4 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+            <span
+              className={`absolute -bottom-1 left-4 right-4 h-[3px] bg-primary rounded-full transition-transform duration-300 ${isActive("/about") ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                }`}
+            />
           </Link>
-          <Link to="/contact" className="px-4 py-2 text-charcoal/60 hover:text-primary transition-colors relative group">
+          <Link
+            to="/contact"
+            className={`px-4 py-2 transition-colors relative group ${isActive("/contact") ? "text-primary" : "text-charcoal/60 hover:text-primary"
+              }`}
+          >
             Contact
-            <span className="absolute bottom-1 left-4 right-4 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+            <span
+              className={`absolute -bottom-1 left-4 right-4 h-[3px] bg-primary rounded-full transition-transform duration-300 ${isActive("/contact") ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                }`}
+            />
           </Link>
         </nav>
 
         <div className="flex items-center gap-6">
-          {showSearch && (
+          {showSearch && user && (
             <div className="relative group hidden lg:block">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                 <svg className="h-4 w-4 text-charcoal/30 group-focus-within:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,12 +106,19 @@ export default function Header({
             </div>
           )}
 
-          <div className="flex items-center gap-4">
-            {user ? (
+          <div className="flex items-center gap-4 min-w-[120px] justify-end">
+            {isLoading ? (
+              <div className="flex items-center gap-2 animate-pulse">
+                <div className="h-8 w-16 bg-black/5 rounded-full" />
+                <div className="h-8 w-16 bg-black/5 rounded-full" />
+              </div>
+            ) : user ? (
               <div className="flex items-center gap-4">
                 <Link to="/profile" className="flex flex-col items-end group">
                   <span className="text-[11px] font-black text-charcoal group-hover:text-primary transition-colors">{user.name}</span>
-                  <span className="text-[9px] font-bold text-primary uppercase tracking-tighter">Member</span>
+                  <span className="text-[9px] font-bold text-primary uppercase tracking-tighter">
+                    {user.role === "admin" ? "Admin" : "Member"}
+                  </span>
                 </Link>
                 <button
                   onClick={logout}

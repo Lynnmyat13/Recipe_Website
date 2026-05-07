@@ -1,18 +1,27 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { getRecipeById, getRecipeImageUrl, toggleFavorite, getFavorites, type Recipe } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
+type DetailLocationState = {
+  from?: string;
+  backLabel?: string;
+};
+
 export default function RecipeDetail() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const { token } = useAuth();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [togglingFavorite, setTogglingFavorite] = useState(false);
+  const locationState = (location.state as DetailLocationState | null) ?? null;
+  const backTarget = locationState?.from || "/recipes";
+  const backLabel = locationState?.backLabel || "Back to Lexicon";
 
   useEffect(() => {
     if (!id) return;
@@ -102,10 +111,10 @@ export default function RecipeDetail() {
             <h2 className="text-4xl font-serif font-black text-charcoal mb-6">Archive Missing</h2>
             <p className="text-charcoal/50 text-lg leading-relaxed mb-12 font-medium">{error || "The specific recipe could not be located in our archives."}</p>
             <Link
-              to="/recipes"
+              to={backTarget}
               className="bg-charcoal text-white px-12 py-5 rounded-full font-black text-xs uppercase tracking-[0.2em] hover:bg-primary transition-all shadow-2xl shadow-charcoal/20"
             >
-              Back to Lexicon
+              {backLabel}
             </Link>
           </div>
         </main>
@@ -123,7 +132,7 @@ export default function RecipeDetail() {
       <main className="site-width flex-1 py-16 print:py-0 print:m-0">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 print:hidden">
           <Link
-            to="/recipes"
+            to={backTarget}
             className="group flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-charcoal/30 hover:text-primary transition-all"
           >
             <div className="w-8 h-8 rounded-full border border-black/5 flex items-center justify-center group-hover:border-primary group-hover:bg-primary group-hover:text-white transition-all">
@@ -131,7 +140,7 @@ export default function RecipeDetail() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </div>
-            Back to Lexicon
+            {backLabel}
           </Link>
 
           <button
@@ -155,11 +164,13 @@ export default function RecipeDetail() {
             <img
               src={getRecipeImageUrl(recipe.imageName)}
               alt={recipe.recipeName}
+              loading="eager"
+              decoding="async"
               className="h-full w-full object-cover transition-transform duration-2000 group-hover:scale-110"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 if (!target.src.includes('unsplash')) {
-                  target.src = "https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&q=80&w=800&h=1000";
+                  target.src = "https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&q=70&w=800&h=1000";
                 }
               }}
             />

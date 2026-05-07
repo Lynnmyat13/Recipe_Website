@@ -4,25 +4,44 @@ import homeBg from "../assets/Home_bg.png";
 import pastaImg from "../assets/Pasta.png";
 import logo from "../assets/Logo.png";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { type Recipe, getRecommendations, getRecipeImageUrl } from "../lib/api";
+import { useEffect, useRef, useState } from "react";
+import { type Recipe, getRecipeImageUrl, getRecipes } from "../lib/api";
 
 export default function Home() {
-  const [featuredRecipes, setFeaturedRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [randomRecipes, setRandomRecipes] = useState<Recipe[]>([]);
+  const [randomLoading, setRandomLoading] = useState(true);
+  const [randomError, setRandomError] = useState<string | null>(null);
+  const carouselRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    async function fetchFeatured() {
+    async function fetchRandomRecipes() {
+      setRandomLoading(true);
+      setRandomError(null);
+
       try {
-        const data = await getRecommendations("", 4);
-        setFeaturedRecipes(data.recommendations);
+        const data = await getRecipes("", "", "", undefined, undefined, 1, 1000);
+        const recipes = data.recipes;
+        if (recipes.length === 0) {
+          setRandomRecipes([]);
+          return;
+        }
+
+        const shuffled = [...recipes];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        setRandomRecipes(shuffled.slice(0, 8));
       } catch (error) {
-        console.error("Failed to fetch featured recipes:", error);
+        console.error("Failed to fetch random recipes:", error);
+        setRandomError("Unable to load recipe suggestions.");
       } finally {
-        setLoading(false);
+        setRandomLoading(false);
       }
     }
-    fetchFeatured();
+
+    void fetchRandomRecipes();
   }, []);
 
   return (
@@ -94,6 +113,8 @@ export default function Home() {
                     <img
                       src={pastaImg}
                       alt="Floating Pasta"
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-700"
                     />
                     <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
@@ -106,6 +127,8 @@ export default function Home() {
                     <img
                       src={homeBg}
                       alt="Hero Culinary"
+                      loading="eager"
+                      decoding="async"
                       className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-2000"
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-charcoal/40 via-transparent to-transparent" />
@@ -129,87 +152,111 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Featured Section */}
-        <section className="py-32 site-width bg-white">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
+        {/* Random Picks Section */}
+        <section className="py-32 site-width">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
             <div className="max-w-xl">
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary mb-4 block">Selection</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary mb-4 block">
+                Discover
+              </span>
               <h2 className="text-4xl md:text-5xl font-serif font-black text-charcoal mb-6 leading-tight">
-                Seasonal <span className="italic text-primary">Inspirations</span>
+                Culinary <span className="italic text-primary">Inspiration</span>
               </h2>
               <p className="text-charcoal/50 text-lg leading-relaxed">
-                Hand-picked culinary highlights from our global kitchen, updated weekly.
+                Fresh inspiration every visit — a curated selection of eight masterpieces to help you explore something new.
               </p>
             </div>
-            <Link
-              to="/recipes"
-              className="inline-flex items-center gap-3 text-primary font-black text-xs uppercase tracking-[0.2em] group border-b-2 border-primary/10 pb-2 hover:border-primary transition-all"
-            >
-              Full Collection
-              <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
           </div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="aspect-4/5 bg-bg rounded-3xl mb-6" />
-                  <div className="h-5 bg-bg rounded w-3/4 mb-3" />
-                  <div className="h-3 bg-bg rounded w-1/2" />
-                </div>
-              ))}
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center px-2 z-10 md:px-4">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!carouselRef.current) return;
+                  carouselRef.current.scrollBy({ left: -carouselRef.current.clientWidth * 0.9, behavior: "smooth" });
+                }}
+                className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-white text-charcoal shadow-sm transition hover:border-primary/30 hover:text-primary"
+                aria-label="Scroll left"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
-              {featuredRecipes.map((recipe) => (
-                <Link
-                  key={recipe._id}
-                  to={`/recipe/${recipe._id}`}
-                  className="group block"
-                >
-                  <div className="relative aspect-4/5 overflow-hidden rounded-3xl mb-6 shadow-sm transition-all duration-700 group-hover:shadow-2xl group-hover:-translate-y-2">
-                    <img
-                      src={getRecipeImageUrl(recipe.imageName)}
-                      alt={recipe.recipeName}
-                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        if (!target.src.includes('unsplash')) {
-                          target.src = "https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&q=80&w=800&h=1000";
-                        }
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-charcoal/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
-
-                    <div className="absolute top-5 left-5">
-                      <span className="px-3 py-1 glass text-charcoal text-[9px] font-black uppercase tracking-widest rounded-full">
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 z-10 md:px-4">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!carouselRef.current) return;
+                  carouselRef.current.scrollBy({ left: carouselRef.current.clientWidth * 0.9, behavior: "smooth" });
+                }}
+                className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-white text-charcoal shadow-sm transition hover:border-primary/30 hover:text-primary"
+                aria-label="Scroll right"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+            {randomError ? (
+              <div className="rounded-4xl border border-red-100 bg-red-50 px-8 py-12 text-center text-sm font-semibold text-red-600">
+                {randomError}
+              </div>
+            ) : randomLoading ? (
+              <div className="flex gap-6 overflow-hidden px-2">
+                {[...Array(4)].map((_, index) => (
+                  <div key={index} className="min-w-70 rounded-[3rem] bg-bg p-6 shadow-sm">
+                    <div className="aspect-4/5 animate-pulse rounded-4xl bg-black/5 mb-6" />
+                    <div className="h-4 animate-pulse rounded bg-black/5 mb-3" />
+                    <div className="h-4 animate-pulse rounded bg-black/5 w-3/4" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div
+                ref={carouselRef}
+                className="no-scrollbar flex gap-8 overflow-x-auto pb-4 pr-4 scroll-smooth"
+              >
+                {randomRecipes.map((recipe) => (
+                  <Link
+                    key={recipe._id}
+                    to={`/recipe/${recipe._id}`}
+                    className="min-w-70 max-w-70 shrink-0 overflow-hidden rounded-[3rem] border border-black/5 bg-white shadow-sm transition hover:-translate-y-1"
+                  >
+                    <div className="relative aspect-4/5 overflow-hidden">
+                      <img
+                        src={getRecipeImageUrl(recipe.imageName)}
+                        alt={recipe.recipeName}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          if (!target.src.includes("unsplash")) {
+                            target.src = "https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&q=60&w=400&h=500";
+                          }
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-linear-to-t from-charcoal/60 via-transparent to-transparent" />
+                      <div className="absolute top-4 left-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-charcoal shadow-sm">
                         {recipe.category}
-                      </span>
+                      </div>
                     </div>
-
-                    <div className="absolute bottom-6 left-6 right-6 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                      <div className="flex items-center gap-4 text-white text-[9px] font-black uppercase tracking-widest">
-                        <span className="flex items-center gap-1.5">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          {recipe.cookingTimeMinutes}m
-                        </span>
-                        <span className="w-1 h-1 rounded-full bg-white/40" />
+                    <div className="p-5">
+                      <h3 className="text-lg font-serif font-black text-charcoal leading-tight mb-3">
+                        {recipe.recipeName}
+                      </h3>
+                      <div className="flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-charcoal/60">
+                        <span>{recipe.cookingTimeMinutes}m</span>
                         <span>{recipe.caloriesPerServing} kcal</span>
                       </div>
                     </div>
-                  </div>
-                  <h3 className="text-xl font-serif font-black text-charcoal group-hover:text-primary transition-colors line-clamp-2 leading-snug">
-                    {recipe.recipeName}
-                  </h3>
-                </Link>
-              ))}
-            </div>
-          )}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
 
         {/* Categories Section */}
@@ -248,8 +295,10 @@ export default function Home() {
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div className="relative aspect-video rounded-[3rem] overflow-hidden shadow-2xl">
                 <img
-                  src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=1200&h=800"
+                  src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=70&w=800&h=450"
                   alt="Daily Special"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-2000"
                 />
                 <div className="absolute inset-0 bg-black/20" />
@@ -368,6 +417,6 @@ export default function Home() {
       </main>
 
       <Footer />
-    </div>
+    </div >
   );
 }

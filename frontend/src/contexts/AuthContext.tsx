@@ -14,9 +14,10 @@ const USER_KEY = "recipe_user";
 
 interface AuthContextType {
   user: User | null;
+  setUser: (user: User | null) => void;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (email: string, password: string, name: string) => Promise<User>;
   logout: () => void;
   isLoading: boolean;
   error: string | null;
@@ -25,19 +26,43 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+function normalizeStoredUser(value: string): User {
+  const parsed = JSON.parse(value) as Partial<User>;
+  return {
+    id: String(parsed.id ?? ""),
+    email: String(parsed.email ?? ""),
+    name: String(parsed.name ?? ""),
+    role: parsed.role === "admin" ? "admin" : "user",
+    profileImage: parsed.profileImage || "",
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadStored = useCallback(() => {
+  const loadStored = useCallback(async () => {
     try {
       const t = localStorage.getItem(TOKEN_KEY);
       const u = localStorage.getItem(USER_KEY);
       if (t && u) {
         setToken(t);
-        setUser(JSON.parse(u));
+        const storedUser = normalizeStoredUser(u);
+        setUser(storedUser);
+
+        // Sync with server to get latest profile image/info
+        try {
+          const freshUser = await api.getCurrentUser();
+          setUser(freshUser);
+          localStorage.setItem(USER_KEY, JSON.stringify(freshUser));
+        } catch (e) {
+          console.error("Failed to sync user session:", e);
+          if ((e as any).status === 401) {
+            logout();
+          }
+        }
       }
     } finally {
       setIsLoading(false);
@@ -55,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(t);
     localStorage.setItem(TOKEN_KEY, t);
     localStorage.setItem(USER_KEY, JSON.stringify(u));
+    return u;
   }, []);
 
   const register = useCallback(
@@ -65,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(t);
       localStorage.setItem(TOKEN_KEY, t);
       localStorage.setItem(USER_KEY, JSON.stringify(u));
+      return u;
     },
     []
   );
@@ -80,6 +107,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthContextType = {
     user,
+    setUser: (u: User | null) => {
+      setUser(u);
+      if (u) {
+        localStorage.setItem(USER_KEY, JSON.stringify(u));
+      } else {
+        localStorage.removeItem(USER_KEY);
+      }
+    },
     token,
     login,
     register,

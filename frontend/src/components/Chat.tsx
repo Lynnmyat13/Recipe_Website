@@ -45,8 +45,18 @@ export default function Chat() {
     setInput("");
     setIsLoading(true);
 
+    const startTime = Date.now();
+
     try {
       const response = await api.chat(input);
+      
+      // Ensure at least 2 seconds of loading time
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, 2000 - elapsedTime);
+      if (remainingTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingTime));
+      }
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: response.message,

@@ -10,8 +10,6 @@ const usefulLinks = [
 const informationLinks = [
   { label: "About Us", to: "/about" },
   { label: "Contact Us", to: "/contact" },
-  { label: "Terms & Conditions", to: "#" },
-  { label: "Privacy Policy", to: "#" },
 ];
 
 function SocialIcon({
@@ -114,10 +112,6 @@ export default function Footer() {
       <div className="border-t border-black/5 py-10">
         <div className="site-width flex flex-col items-center justify-between gap-6 sm:flex-row">
           <p className="text-[10px] font-black uppercase tracking-widest text-charcoal/20">© {new Date().getFullYear()} Chef's Lexicon. All rights reserved.</p>
-          <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-charcoal/20">
-            <a href="#" className="hover:text-charcoal transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-charcoal transition-colors">Terms of Service</a>
-          </div>
         </div>
       </div>
     </footer>
