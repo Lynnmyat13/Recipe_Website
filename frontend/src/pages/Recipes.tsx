@@ -56,6 +56,7 @@ export default function Recipes() {
             setRecipes(data as any);
             setTotalRecipes(data.length);
           }
+          console.log(totalRecipes);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load recipes");
