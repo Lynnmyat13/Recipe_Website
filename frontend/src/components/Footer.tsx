@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import logo from "../assets/Logo.png";
 
 const usefulLinks = [
   { label: "Featured", href: "/recipes" },
@@ -42,7 +43,7 @@ export default function Footer() {
           <Link to="/" className="flex items-center gap-3 group mb-8">
             <div className="h-10 w-10 overflow-hidden rounded-xl bg-white border border-black/5 shadow-sm group-hover:scale-105 transition-transform duration-300">
               <img
-                src="/src/assets/Logo.png"
+                src={logo}
                 alt="Chef's Lexicon logo"
                 className="h-full w-full object-contain p-1.5"
               />

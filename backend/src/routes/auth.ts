@@ -7,7 +7,6 @@ import {
   createAuthToken,
   type AuthenticatedRequest,
 } from "../middleware/auth";
-import { uploadRecipeImage, deleteRecipeImage } from "../lib/supabase";
 
 const router = Router();
 const upload = multer({
